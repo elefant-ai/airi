@@ -8,7 +8,6 @@ import { ref, toRaw } from 'vue'
 import { useQueue } from '../composables'
 import { useLlmmarkerParser } from '../composables/llmmarkerParser'
 import { useLLM } from '../stores/llm'
-import { asyncIteratorFromReadableStream } from '../utils'
 import { useAiriCardStore } from './modules'
 
 export interface ErrorMessage {
@@ -72,7 +71,15 @@ export const useChatStore = defineStore('chat', () => {
 
   const streamingMessage = ref<ChatAssistantMessage>({ role: 'assistant', content: '', slices: [], tool_results: [] })
 
-  async function send(sendingMessage: string, options: { model: string, chatProvider: ChatProvider, providerConfig?: Record<string, unknown> }) {
+  async function send(
+    sendingMessage: string,
+    options: {
+      model: string
+      chatProvider: ChatProvider
+      providerId: string
+      providerConfig?: Record<string, unknown>
+    },
+  ) {
     try {
       sending.value = true
 
@@ -133,13 +140,12 @@ export const useChatStore = defineStore('chat', () => {
       streamingMessage.value = { role: 'assistant', content: '', slices: [], tool_results: [] }
       messages.value.push({ role: 'user', content: sendingMessage })
       messages.value.push(streamingMessage.value)
-      const newMessages = messages.value.slice(0, messages.value.length - 1).map((msg) => {
-        if (msg.role === 'assistant') {
-          const { slices: _, ...rest } = msg // exclude slices
-          return toRaw(rest)
-        }
-        return toRaw(msg)
-      })
+      const newMessages = messages.value
+        .slice(0, messages.value.length - 1)
+        .map((msg) => {
+          const { role, content } = toRaw(msg)
+          return { role, content } as Message
+        })
 
       for (const hook of onAfterMessageComposedHooks.value) {
         await hook(sendingMessage)
@@ -152,6 +158,7 @@ export const useChatStore = defineStore('chat', () => {
       const headers = (options.providerConfig?.headers || {}) as Record<string, string>
       const res = await stream(options.model, options.chatProvider, newMessages as Message[], {
         headers,
+        disableTools: options.providerId === 'player2-api',
         onToolCall(toolCall) {
           slicesQueue.add({
             type: 'tool-call',
@@ -171,15 +178,9 @@ export const useChatStore = defineStore('chat', () => {
         await hook(sendingMessage)
       }
 
-      let fullText = ''
-
-      for await (const textPart of asyncIteratorFromReadableStream(res.textStream, async v => v)) {
-        slicesQueue.add({
-          type: 'text',
-          text: textPart,
-        })
-        fullText += textPart
-      }
+      let fullText = res.text || ''
+      if (fullText)
+        slicesQueue.add({ type: 'text', text: fullText })
 
       await parser.end()
 

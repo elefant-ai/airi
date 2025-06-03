@@ -32,6 +32,7 @@ async function handleSend() {
     await send(messageInput.value, {
       model: activeModel.value,
       chatProvider: providersStore.getProviderInstance(activeProvider.value) as ChatProvider,
+      providerId: activeProvider.value,
       providerConfig,
     })
   }
