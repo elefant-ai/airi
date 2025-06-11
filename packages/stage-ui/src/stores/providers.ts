@@ -1,4 +1,3 @@
-import type { ChatProvider, ChatProviderWithExtraOptions, EmbedProvider, EmbedProviderWithExtraOptions, SpeechProvider, SpeechProviderWithExtraOptions, TranscriptionProvider, TranscriptionProviderWithExtraOptions } from '@xsai-ext/shared-providers'
 import type {
   UnAlibabaCloudOptions,
   UnElevenLabsOptions,
@@ -23,13 +22,15 @@ import {
   createWorkersAI,
   createXAI,
 } from '@xsai-ext/providers-cloud'
-import { createOllama, createPlayer2 } from '@xsai-ext/providers-local'
+import { createOllama } from '@xsai-ext/providers-local'
+import { type ChatProvider, type ChatProviderWithExtraOptions, createChatProvider, createMetadataProvider, type EmbedProvider, type EmbedProviderWithExtraOptions, merge, type SpeechProvider, type SpeechProviderWithExtraOptions, type TranscriptionProvider, type TranscriptionProviderWithExtraOptions } from '@xsai-ext/shared-providers'
 import { listModels } from '@xsai/model'
 import { defineStore } from 'pinia'
 import {
   createUnAlibabaCloud,
   createUnElevenLabs,
   createUnMicrosoft,
+  createUnSpeech,
   createUnVolcengine,
   listVoices,
 } from 'unspeech'
@@ -599,6 +600,31 @@ export const useProvidersStore = defineStore('providers', () => {
         },
       },
     },
+    'player2-speech': {
+      id: 'player2-speech',
+      category: 'speech',
+      tasks: ['text-to-speech'],
+      nameKey: 'settings.pages.providers.provider.player2.title',
+      name: 'Player2 Speech',
+      descriptionKey: 'settings.pages.providers.provider.player2.description',
+      description: 'player2.game',
+      defaultOptions: {
+        baseUrl: 'http://localhost:4315/v1/',
+      },
+      createProvider: () => createUnSpeech('', 'http://localhost:4315/v1/'),
+      capabilities: {
+        listVoices: async () => [{
+          id: '01955d76-ed5b-7407-a03c-cdd993439ba4',
+          name: 'Madison',
+          gender: 'female',
+          provider: 'player2-speech',
+          languages: [],
+        }],
+      },
+      validators: {
+        validateProviderConfig: () => true,
+      },
+    },
     'microsoft-speech': {
       id: 'microsoft-speech',
       category: 'speech',
@@ -903,7 +929,8 @@ export const useProvidersStore = defineStore('providers', () => {
         baseUrl: 'http://localhost:4315/v1/',
       },
       createProvider: (config) => {
-        return createPlayer2((config.baseURL as string).trim())
+        // return createPlayer2((config.baseURL as string).trim())
+        return merge(createMetadataProvider('player2'), createChatProvider({ baseURL: (config?.baseUrl as string).trim() }))
       },
       capabilities: {
         listModels: async () => [

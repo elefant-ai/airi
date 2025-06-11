@@ -9,8 +9,8 @@ import {
   ProviderSettingsLayout,
   SpeechPlayground,
 } from '@proj-airi/stage-ui/components'
-import { FieldRange } from '@proj-airi/ui'
 import { useProvidersStore, useSpeechStore } from '@proj-airi/stage-ui/stores'
+import { FieldRange } from '@proj-airi/ui'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -83,8 +83,9 @@ onMounted(async () => {
 // Watch settings and update the provider configuration
 watch(speedRatio, () => {
   const providerConfig = providersStore.getProviderConfig(providerId)
-  if (!providerConfig.audio)
+  if (!providerConfig.audio) {
     providerConfig.audio = {}
+  }
 
   (providerConfig.audio as any).speedRatio = speedRatio.value
 })
