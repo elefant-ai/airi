@@ -15,7 +15,7 @@
 <h1 align="center">Project AIRI</h1>
 
 <p align="center">
-  [<a href="https://discord.gg/TgQ3Cu2F7A">Join Discord Server</a>] [<a href="https:///airi.moeru.ai">Try it</a>] [<a href="https://github.com/moeru-ai/airi/blob/main/README.zh-CN.md">简体中文</a>] [<a href="https://github.com/moeru-ai/airi/blob/main/README.ja-JP.md">日本語</a>]
+  [<a href="https://discord.gg/TgQ3Cu2F7A">Join Discord Server</a>] [<a href="https:///airi.moeru.ai">Try it</a>] [<a href="https://github.com/moeru-ai/airi/blob/main/docs/README.zh-CN.md">简体中文</a>] [<a href="https://github.com/moeru-ai/airi/blob/main/docs/README.ja-JP.md">日本語</a>]
 </p>
 
 <p align="center">
@@ -283,21 +283,6 @@ flowchart TD
   style DB1 fill:#f9f9d4,stroke:#333,stroke-width:1px
   style Memory fill:#f9f9d4,stroke:#333,stroke-width:1px
   style Memory_PGVector fill:#f9f9d4,stroke:#333,stroke-width:1px
-```
-
-```mermaid
-%%{ init: { 'flowchart': { 'curve': 'catmullRom' } } }%%
-
-flowchart TD
-  subgraph deploy&bundle
-    direction LR
-    HFUP["hfup"]
-    HF[/"HuggingFace Spaces"\]
-    HFUP -...- UI -...-> HF
-    HFUP -...- whisper-webgpu -...-> HF
-    HFUP -...- moonshine-web -...-> HF
-  end
-
 ```
 
 ## Models used

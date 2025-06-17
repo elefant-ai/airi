@@ -66,6 +66,7 @@ export interface ProviderMetadata {
   validators: {
     validateProviderConfig: (config: Record<string, unknown>) => Promise<boolean> | boolean
   }
+  configured?: boolean
 }
 
 export interface ModelInfo {
@@ -283,7 +284,13 @@ export const useProvidersStore = defineStore('providers', () => {
       },
       validators: {
         validateProviderConfig: (config) => {
-          return !!config.baseUrl
+          if (!config.baseUrl)
+            return false
+
+          // Check if the Ollama server is reachable
+          return fetch(`${(config.baseUrl as string).trim()}models`)
+            .then(response => response.ok)
+            .catch(() => false)
         },
       },
     },
@@ -1311,6 +1318,18 @@ export const useProvidersStore = defineStore('providers', () => {
     return allProvidersMetadata.value.filter(metadata => metadata.category === 'transcription')
   })
 
+  const configuredChatProvidersMetadata = computed(() => {
+    return allChatProvidersMetadata.value.filter(metadata => configuredProviders.value[metadata.id])
+  })
+
+  const configuredSpeechProvidersMetadata = computed(() => {
+    return allAudioSpeechProvidersMetadata.value.filter(metadata => configuredProviders.value[metadata.id])
+  })
+
+  const configuredTranscriptionProvidersMetadata = computed(() => {
+    return allAudioTranscriptionProvidersMetadata.value.filter(metadata => configuredProviders.value[metadata.id])
+  })
+
   function getProviderConfig(providerId: string) {
     return providerCredentials.value[providerId]
   }
@@ -1337,5 +1356,8 @@ export const useProvidersStore = defineStore('providers', () => {
     allChatProvidersMetadata,
     allAudioSpeechProvidersMetadata,
     allAudioTranscriptionProvidersMetadata,
+    configuredChatProvidersMetadata,
+    configuredSpeechProvidersMetadata,
+    configuredTranscriptionProvidersMetadata,
   }
 })
